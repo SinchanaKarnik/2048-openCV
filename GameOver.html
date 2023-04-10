@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport",content="width=divice-width, initial-scale:1.0">
+    <title>2048</title>
+    <link rel ="stylesheet" href="2048.css"></script>
+</head>
+<body>
+   <h1>Game Over!!!</h1>
+   <hr>
+   <h2> Final Score: <span id="score"></span></h2>
+   <script>
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const score = urlParams.get('finalscore');
+    
+    document.getElementById("score").innerText = score
+</script>
+</body>
+</html>
