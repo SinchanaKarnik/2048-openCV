@@ -3,49 +3,45 @@ import time
 import HandTrackingModule as htm 
 import pyautogui
 from selenium import webdriver
+import os
 
+dir = os.getcwd()
 wCam, hCam = 680, 480
-url = "file:///C:/Users/SINCHANA/Desktop/Work/Objectdetection_opencv/2048/2048.html"
-# chrome_path = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+# to load my game html file
+
+url = os.path.join(dir, '2048.html')
 driver = webdriver.Chrome()
 driver.get(url)
-def keyup():
-    return driver.execute_script("""
-    var event = new KeyboardEvent('keyup', {
-        key: 'ArrowLeft',
-        code: 'ArrowLeft',
-        keyCode: 37,
-        isTrusted: true
-    });
-    
-    // Dispatch the event to the webpage
-    document.dispatchEvent(event);
-""")
 
+# capture my video using device camera
 cap = cv2.VideoCapture(0)
 cap.set(3, wCam)
 cap.set(4, hCam)
 ptime = 0
 
+# detect using HandTracking Module
 detector = htm.HandDetector()
 prev_xlandmark = None
 prev_ylandmark = None
-counter = 0
-leftc, rightc = 0, 0
+# to press cursor only once while moving from mid to any 4 direction
+counter = False
+
 while True:
     success, img = cap.read()
     img = detector.findHands(img)
     img= cv2.flip(img, 1)
     landmarks = detector.findPosition(img, draw=False)
     if len(landmarks)!=0:
-        landmark_x = landmarks[9][1]
-        landmark_y = landmarks[9][2]
-        if prev_xlandmark is not None:
-            print('x', prev_xlandmark - landmark_x)
-            print('y', prev_ylandmark - landmark_y)
-            if (prev_xlandmark - landmark_x)< 0:
-                leftc += 1
-                if leftc > 10:
+        landmark_x = landmarks[8][1]
+        landmark_y = landmarks[8][2]
+        if prev_xlandmark is not None and counter:
+        
+            print(counter)
+            counter = False
+            #check if hand is mid with respect to y axis then it is either left or right
+            if ( landmark_y > 160 and landmark_y < 320):
+                
+                if landmark_x > 450 and landmark_y > 160 and landmark_y < 320:
                     print('left')
                     #pyautogui.keyDown('left')
                     #time.sleep(1)
@@ -60,10 +56,8 @@ while True:
                     });
                     document.dispatchEvent(event);
                     """)
-                    leftc = 0
-            else:
-                rightc += 1
-                if rightc > 10:
+                elif landmark_x < 226 and landmark_y > 160 and landmark_y < 320:
+                
                     print('right')
                     #pyautogui.keyDown('right')
                     #time.sleep(1)
@@ -77,12 +71,47 @@ while True:
                     });
                     document.dispatchEvent(event);
                     """)
-                    rightc = 0
-        
-        if not counter % 10:
+            #check if hand is mid with respect to x axis then it is either up or down
+            elif (landmark_x > 226 and landmark_x < 450):
+                 print('inside else')
+                 counter = False
+                 if landmark_y < 160 and landmark_x > 226 and landmark_x < 450:
+                        #pyautogui.keyDown('left')
+                        #time.sleep(1)
+                        #pyautogui.keyUp('left')
+                    print('up')  
+                    driver.execute_script("""
+                    var event = new KeyboardEvent('keyup', {
+                    key: 'ArrowUp',
+                    code: 'ArrowUp',
+                    keyCode: 39,
+                    isTrusted: true
+                    });
+                    document.dispatchEvent(event);
+                    """)
+
+                 elif landmark_y > 320 and landmark_x > 226 and landmark_x < 450:
+                        #pyautogui.keyDown('right')
+                        #time.sleep(1)
+                    #pyautogui.keyUp('right')
+                    print('down')
+                    driver.execute_script("""
+                    var event = new KeyboardEvent('keyup', {
+                    key: 'ArrowDown',
+                    code: 'ArrowDown',
+                    keyCode: 40,
+                    isTrusted: true
+                    });
+                    document.dispatchEvent(event);
+                    """)
+
+
+        if not counter and landmark_x > 226 and landmark_x < 450 and landmark_y > 160 and landmark_y < 320:
+            counter = True
             prev_ylandmark = landmark_y
             prev_xlandmark = landmark_x
-    counter += 1
+            print('prev', prev_xlandmark, prev_ylandmark)
+
     cv2.imshow('Img', img)
     key = cv2.waitKey(10)
     if key == ord('q'):
